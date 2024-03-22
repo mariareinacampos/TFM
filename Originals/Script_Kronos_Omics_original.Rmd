@@ -1,0 +1,78 @@
+
+```{r}
+library(kronos)
+library(tidyverse)
+library(ggplot2)
+```
+
+Import dataset
+```{r}
+library(readxl)
+bigdata_yjl_ht_new <- read_excel("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_circadian_clock/YJL_Exp2_circadian_clock_ht_extra/bigdata_yjl_ht_new_clockgenes.xlsx")
+bigmeta_yjl_ht_new <- read_excel("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_KRONOS_Omics/bigmeta_yjl_ht_new_clockgenes.xlsx")
+```
+
+'Omics analysis
+```{r}
+#n = c(rows, columns)
+head(bigdata_yjl_ht_new, n = c(39, 53))
+head(bigmeta_yjl_ht_new)
+```
+
+```{r}
+out_list_yjl_hc = fw_kronos(x = bigdata_yjl_hc, 
+                     formula = ~ Group + time(Timepoint), 
+                     metadata = bigmeta_yjl_hc, 
+                     period = 24,
+                     verbose = F,
+                     pairwise = T)
+```
+
+
+
+```{r}
+fit_df = kronosListToTable(out_list_yjl_hc)
+
+write.csv(fit_df, "RhythmicityResults_yjl_hc_clockgenes.csv")
+```
+
+head(fit_df, n = c(4, 39))
+
+
+```{r}
+gg_kronos_acrogram(out_list_yjl_hc) +
+  scale_fill_manual(values = c("CONTROL" = "#C70E2D",
+                               "YJL" = "#9F9EA3")) +
+  ggtitle("Gene expression")
+```
+
+
+
+```{r}
+pairwise_list = vector(mode = "list", length = length(out_list_yjl_hc)) 
+for(m in 1:length(out_list_yjl_hc)){
+  pairwise_list[[m]] <- out_list_yjl_hc [[m]]@pairwise_models
+  names(pairwise_list)[m] <- names(out_list_yjl_hc)[m]}
+bound_list <- lapply(X = pairwise_list, FUN = function(x){do.call(rbind, x)})
+pairwise_df <- do.call(rbind, bound_list)
+pairwise_csv = pairwise_df %>% 
+  rownames_to_column("ID") %>%
+  separate(col = ID, into = c("Feature","ID"), sep = "\\.", extra = "merge") %>%
+  separate(col = ID, into = c("Comparison","Effect"), sep = "\\.")
+```
+
+gg_kronos_acrogram(out_list_yjl_hc)
+
+
+```{r}
+plot_list <- vector(mode = "list", length = length(out_list_yjl_hc_clockgenes))
+for(q in 1:length(out_list_yjl_hc_clockgenes)){
+  
+  plot_list[[q]] <- gg_kronos_sinusoid(out_list_yjl_hc_clockgenes[[q]]) }
+  
+  pdf("Plots_circadian_yjl_hc_clockgenes.pdf")
+for (i in 1:length(plot_list)) {
+  print(plot_list[[i]])
+}
+invisible(dev.off())
+```

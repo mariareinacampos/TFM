@@ -1,0 +1,145 @@
+```{r}
+#SCN
+library(kronos)
+library(tidyverse)
+library(ggplot2)
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN")
+
+```
+
+```{r}
+library(readxl)
+pd60_scn_bmal1 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_scn_bmal1.xlsx")
+
+pd60_scn_clock <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_scn_clock.xlsx")
+
+pd60_scn_cry1 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_scn_cry1.xlsx")
+
+pd60_scn_cry2 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_scn_cry2.xlsx")
+
+pd60_scn_dbp <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_scn_dbp.xlsx")
+
+pd60_scn_gsk3b <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_scn_gsk3b.xlsx")
+
+pd60_scn_nr1d2 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_scn_nr1d2.xlsx")
+
+pd60_scn_per1 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_scn_per1.xlsx")
+
+pd60_scn_per2 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_scn_per2.xlsx")
+
+pd60_scn_rora <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_scn_rora.xlsx")
+
+```
+
+```{r}
+#Para asegurarse que todos los ficheros tienen los datos en el formato adecuado
+summary(pd60_hpc_bmal1)
+summary(pd60_hpc_clock)
+summary(pd60_hpc_cry1)
+summary(pd60_hpc_cry2)
+summary(pd60_hpc_dbp)
+summary(pd60_hpc_gsk3b)
+summary(pd60_hpc_nr1d2)
+summary(pd60_hpc_per1)
+summary(pd60_hpc_per2)
+summary(pd60_hpc_rora)
+```
+
+```{r}
+library(openxlsx)
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN")
+
+# List of datasheets (replace with your actual datasheets)
+datasheet_list <- list(pd60_scn_bmal1, pd60_scn_clock, pd60_scn_cry1, pd60_scn_cry2, pd60_scn_dbp, pd60_scn_gsk3b, pd60_scn_nr1d2, pd60_scn_per1, pd60_scn_per2, pd60_scn_rora)  # Add all your datasheets to this list
+
+output_list <- list()
+
+for (i in seq_along(datasheet_list)) {
+  output <- kronos(formula = Variable_1 ~ Cycle + time(Timepoint), 
+                   data = datasheet_list[[i]], 
+                   period = 24, 
+                   verbose = TRUE, 
+                   pairwise = TRUE)
+  
+  output_list[[i]] <- output
+  
+  getKronos_groupwise(output)
+  getKronos_pairwise(output)
+  getKronos_pairwise_p(output)
+}
+
+perform_analysis <- function(datasheet) {
+  output <- kronos(formula = Variable_1 ~ Cycle + time(Timepoint), 
+                   data = datasheet, 
+                   period = 24, 
+                   verbose = TRUE, 
+                   pairwise = TRUE)
+  
+  getKronos_groupwise(output)
+  getKronos_pairwise(output)
+  getKronos_pairwise_p(output)
+}
+
+# Assuming datasheet_list contains all your datasheets
+lapply(datasheet_list, perform_analysis)
+
+# Create a new workbook
+wb <- createWorkbook()
+
+# Extract gene names from datasheet names
+gene_names <- c("bmal1", "clock", "cry1", "cry2", "dbp", "gsk3b", "nr1d2", "per1", "per2", "rora")
+
+# Add each output as a sheet to the workbook
+for (gene_name in gene_names) {
+  addWorksheet(wb, sheetName = gene_name)
+}
+
+# Write data to corresponding sheets in the workbook
+for (i in seq_along(output_list)) {
+  output <- output_list[[i]]
+  gene_name <- gene_names[i]
+  output_component <- output@ind_fit
+  
+  writeData(wb, sheet = gene_name, x = output_component, startRow = 1, startCol = 1)
+}
+
+# Save the workbook to a file
+saveWorkbook(wb, file = "PD60_SCN_all_clock_genes.xlsx", overwrite = TRUE)
+```
+
+```{r}
+
+# Set the working directory inicial
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN")
+
+# Specify the output folder
+output_folder <- "Graphs_PD60_SCN"
+
+# Create the output folder if it doesn't exist
+if (!file.exists(output_folder)) {
+  dir.create(output_folder)
+}
+
+# Loop through each output in output_list and generate a plot using gg_kronos_sinusoid
+for (i in seq_along(output_list)) {
+  output <- output_list[[i]]
+  
+  # Create a plot for each outcome
+  plot <- gg_kronos_sinusoid(output) +
+    scale_colour_manual(values = c("Water" = "#000000", "Ethanol" = "#F764C6")) + #line color
+    scale_fill_manual(values = c("Water" = "#FFFFFF", "Ethanol" = "#F764C6")) + #filling color
+    xlab("ZT") +
+    ylab("Fold change") +
+    ggtitle(paste(gene_names[i], "expression", sep = " "))
+  
+  # Extract gene name for the current iteration
+  gene_name <- gene_names[i]
+  
+  # Save the plot with a unique file name for each output containing the gene name
+  file_name <- paste0(output_folder, "/", gene_name, "_pd60_scn.png")  # For example: _pd60_hpc_bmal1.png
+  
+  # Save the plot as a PNG file with a specific size
+  ggsave(file = file_name, plot = plot, width = 6, height = 4, units = "in")
+}
+
+```

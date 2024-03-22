@@ -1,0 +1,115 @@
+```{r}
+library(kronos)
+library(tidyverse)
+library(ggplot2)
+setwd("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_circadian_clock/YJL_Exp2_circadian_clock_ht_extra/Results")
+```
+
+```{r}
+library(readxl)
+yjl_ht_bmal1_new <- read_excel("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_circadian_clock/YJL_Exp2_circadian_clock_ht_extra/yjl_ht_bmal1_new.xlsx")
+
+yjl_ht_clock_new <- read_excel("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_circadian_clock/YJL_Exp2_circadian_clock_ht_extra/yjl_ht_clock_new.xlsx")
+
+yjl_ht_cry1_new <- read_excel("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_circadian_clock/YJL_Exp2_circadian_clock_ht_extra/yjl_ht_cry1_new_2.3.xlsx")
+
+yjl_ht_cry2_new <- read_excel("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_circadian_clock/YJL_Exp2_circadian_clock_ht_extra/yjl_ht_cry2_new_2.3.xlsx")
+
+yjl_ht_dbp_new <- read_excel("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_circadian_clock/YJL_Exp2_circadian_clock_ht_extra/yjl_ht_dbp_new.xlsx")
+
+yjl_ht_npas2_new <- read_excel("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_circadian_clock/YJL_Exp2_circadian_clock_ht_extra/yjl_ht_npas2_new.xlsx")
+
+yjl_ht_nr1d2_new <- read_excel("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_circadian_clock/YJL_Exp2_circadian_clock_ht_extra/yjl_ht_nr1d2_new.xlsx")
+
+yjl_ht_per1_new <- read_excel("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_circadian_clock/YJL_Exp2_circadian_clock_ht_extra/yjl_ht_per1_new_2.3_2.xlsx")
+
+yjl_ht_per2_new <- read_excel("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_circadian_clock/YJL_Exp2_circadian_clock_ht_extra/yjl_ht_per2_new.xlsx")
+
+yjl_ht_rora_new <- read_excel("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_circadian_clock/YJL_Exp2_circadian_clock_ht_extra/yjl_ht_rora_new.xlsx")
+```
+
+```{r}
+library(openxlsx)
+setwd("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_circadian_clock/YJL_Exp2_circadian_clock_ht_extra/Results")
+# List of datasheets (replace with your actual datasheets)
+datasheet_list <- list(yjl_ht_bmal1_new, yjl_ht_clock_new, yjl_ht_cry1_new, yjl_ht_cry2_new, yjl_ht_dbp_new, yjl_ht_npas2_new, yjl_ht_nr1d2_new, yjl_ht_per1_new, yjl_ht_per2_new, yjl_ht_rora_new)  # Add all your datasheets to this list
+
+output_list <- list()
+
+for (i in seq_along(datasheet_list)) {
+  output <- kronos(formula = Variable_1 ~ Cycle + time(Timepoint), 
+                   data = datasheet_list[[i]], 
+                   period = 24, 
+                   verbose = TRUE, 
+                   pairwise = TRUE)
+  
+  output_list[[i]] <- output
+  
+  getKronos_groupwise(output)
+  getKronos_pairwise(output)
+  getKronos_pairwise_p(output)
+}
+
+perform_analysis <- function(datasheet) {
+  output <- kronos(formula = Variable_1 ~ Cycle + time(Timepoint), 
+                   data = datasheet, 
+                   period = 24, 
+                   verbose = TRUE, 
+                   pairwise = TRUE)
+  
+  getKronos_groupwise(output)
+  getKronos_pairwise(output)
+  getKronos_pairwise_p(output)
+}
+
+# Assuming datasheet_list contains all your datasheets
+lapply(datasheet_list, perform_analysis)
+
+# Create a new workbook
+wb <- createWorkbook()
+
+# Extract gene names from datasheet names
+gene_names <- c("bmal1", "clock", "cry1", "cry2", "dbp", "npas2", "nr1d2", "per1", "per2", "rora")
+
+# Add each output as a sheet to the workbook
+for (gene_name in gene_names) {
+  addWorksheet(wb, sheetName = gene_name)
+}
+
+# Write data to corresponding sheets in the workbook
+for (i in seq_along(output_list)) {
+  output <- output_list[[i]]
+  gene_name <- gene_names[i]
+  output_component <- output@ind_fit
+  
+  writeData(wb, sheet = gene_name, x = output_component, startRow = 1, startCol = 1)
+}
+
+# Save the workbook to a file
+saveWorkbook(wb, file = "Clock_genes_HT_extra_6.xlsx", overwrite = TRUE)
+```
+
+```{r}
+setwd("C:/Users/U177202/PhD/Experiments_thesis/Youth_Jet_Lag_Experiment_2/YJL_Exp2_Microarrays/YJL_Exp2_KRONOS/YJL_Exp2_circadian_clock/YJL_Exp2_circadian_clock_ht_extra/Results")
+# Loop through each output in output_list and generate a plot using gg_kronos_sinusoid
+for (i in seq_along(output_list)) {
+  output <- output_list[[i]]
+  
+  # Create a plot for each outcome
+  plot <- gg_kronos_sinusoid(output) +
+    scale_colour_manual(values = c("Control" = "#000000", "YJL" = "#C70E2D")) +
+    scale_fill_manual(values = c("Control" = "#BFBFBF", "YJL" = "#C70E2D")) +
+    xlab("ZT") +
+    ylab("Fold change") +
+  ggtitle(paste(gene_names[i], "expression", sep = " "))
+  
+  # Extract gene name for the current iteration
+  gene_name <- gene_names[i]
+  
+  # Save the plot with a unique file name for each output containing the gene name
+  file_name <- paste0(gene_name, "_sinusoid_curve_ht_new_2.3.png")  # For example, bmal1_sinusoid_curve.png, clock_sinusoid_curve.png, etc.
+  
+  # Save the plot as a PNG file with a specific size
+  ggsave(file = file_name, plot = plot, width = 6, height = 4, units = "in")
+}
+```

@@ -1,0 +1,102 @@
+
+```{r}
+library(kronos)
+library(tidyverse)
+library(ggplot2)
+```
+
+Import dataset
+```{r}
+library(readxl)
+bigdata_pd60_hpc <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_HPC/bigdata_pd60_hpc.xlsx")
+bigmeta_pd60_hpc <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_HPC/bigmeta_pd60_hpc.xlsx")
+```
+
+'Omics analysis
+```{r}
+#n = c(rows, columns)
+head(bigdata_pd60_hpc, n = c(52, 47)) #52 files comptant la cabecera, 51 sense la fila inicial
+head(bigmeta_pd60_hpc)
+```
+
+```{r}
+out_list_pd60_hpc = fw_kronos(x = bigdata_pd60_hpc, 
+                     formula = ~ Group + time(Timepoint), 
+                     metadata = bigmeta_pd60_hpc, 
+                     period = 24,
+                     verbose = F,
+                     pairwise = T)
+```
+
+```{r}
+
+# Convert kronosList to data frame
+fit_df <- kronosListToTable(out_list_pd60_hpc)
+
+# Specify the full file path for CSV
+file_path <- "/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_HPC/RhythmicityResults_pd60_hpc.csv"
+
+# Write data frame to CSV file
+write.csv(fit_df, file = file_path, row.names = FALSE)
+
+```
+
+head(fit_df, n = c(4, 39))
+
+
+```{r}
+# Set the working directory
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_HPC")
+
+# Specify the output folder
+output_folder <- "Graphs_PD60_HPC"
+
+# Generate the plot
+plot <- gg_kronos_acrogram(out_list_pd60_hpc) +
+  scale_fill_manual(values = c("Water" = "#A1A1A1",
+                                "Ethanol" = "#F764C6")) +
+  ggtitle("Gene expression")
+
+# Define the file name
+file_name <- paste0(output_folder, "/acrogram_pd60_hpc.png")
+
+# Save the plot as a PNG file in the output folder
+ggsave(file = file_name, plot = plot, width = 6, height = 4, units = "in")
+
+```
+
+
+```{r}
+pairwise_list = vector(mode = "list", length = length(out_list_pd60_hpc)) 
+for(m in 1:length(out_list_pd60_hpc)){
+  pairwise_list[[m]] <- out_list_pd60_hpc [[m]]@pairwise_models
+  names(pairwise_list)[m] <- names(out_list_pd60_hpc)[m]}
+bound_list <- lapply(X = pairwise_list, FUN = function(x){do.call(rbind, x)})
+pairwise_df <- do.call(rbind, bound_list)
+pairwise_csv = pairwise_df %>% 
+  rownames_to_column("ID") %>%
+  separate(col = ID, into = c("Feature","ID"), sep = "\\.", extra = "merge") %>%
+  separate(col = ID, into = c("Comparison","Effect"), sep = "\\.")
+```
+
+gg_kronos_acrogram(out_list_yjl_hc)
+
+
+```{r}
+# Set the working directory
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_HPC")
+
+# Specify the output folder
+output_folder <- "Graphs_PD60_HPC"
+
+plot_list <- vector(mode = "list", length = length(out_list_pd60_hpc))
+for(q in 1:length(out_list_pd60_hpc)){
+  
+  plot_list[[q]] <- gg_kronos_sinusoid(out_list_pd60_hpc[[q]]) }
+  
+  pdf("Plots_circadian_pd60_hpc.pdf")
+for (i in 1:length(plot_list)) {
+  print(plot_list[[i]])
+}
+invisible(dev.off())
+```
