@@ -55,26 +55,26 @@ library(gprofiler2)
 
 ```{r}
 library(readxl)
-bigdata_pd60_mpfc <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mpfc/bigdata_pd60_mpfc.xlsx")
+bigdata_PD35_HPC <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC/bigdata_PD35_HPC.xlsx")
 
-bigmeta_pd60_mpfc <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mpfc/bigmeta_pd60_mpfc.xlsx")
+bigmeta_PD35_HPC <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC/bigmeta_PD35_HPC.xlsx")
 ```
 
 ```{r}
 #n = c(rows, columns)
-print(bigdata_pd60_mpfc, n = c(51, 60)) #52 files comptant la cabecera, 51 sense la fila inicial
-dim(bigdata_pd60_mpfc)
-head(bigmeta_pd60_mpfc)
-dim(bigmeta_pd60_mpfc)
+print(bigdata_PD35_HPC, n = c(51, 55)) #52 files comptant la cabecera, 51 sense la fila inicial
+dim(bigdata_PD35_HPC)
+head(bigmeta_PD35_HPC)
+dim(bigmeta_PD35_HPC)
 
 ```
 
 #OMICS ANALYSIS
 
 ```{r}
-out_list_pd60_mpfc = fw_kronos(x = bigdata_pd60_mpfc[,-1],
+out_list_PD35_HPC = fw_kronos(x = bigdata_PD35_HPC[,-1],
                      formula = ~ Group + time(Timepoint), 
-                     metadata = bigmeta_pd60_mpfc, 
+                     metadata = bigmeta_PD35_HPC, 
                      period = 24,
                      verbose = F,
                      pairwise = T)
@@ -83,18 +83,18 @@ out_list_pd60_mpfc = fw_kronos(x = bigdata_pd60_mpfc[,-1],
 ```{r}
 
 # Convert kronosList to data frame
-fit_df <- kronosListToTable(out_list_pd60_mpfc)
+fit_df <- kronosListToTable(out_list_PD35_HPC)
 
 #Transform the file into a data.frame to work on it in R
 fit_df <- as.data.frame(fit_df)
-fit_df$Genes <- bigdata_pd60_mpfc$Genes
+fit_df$Genes <- bigdata_PD35_HPC$Genes
 
 #Move the Genes column to the first position
 fit_df %>% select(Genes, everything(fit_df)) #Aquí m'ho esta ensenyant a la pantalla, no és real. La funció select és per seleccionar columnes.
 fit_df <- fit_df %>% select(Genes, everything(fit_df)) #Aquí estem guardant-ho de veritat
 
 # Specify the full file path for CSV
-file_path <- "/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mpfc/RhythmicityResults_pd60_mpfc.csv"
+file_path <- "/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC/RhythmicityResults_PD35_HPC.csv"
 
 # Write data frame to CSV file
 write.csv(fit_df, file = file_path, row.names = FALSE)
@@ -105,16 +105,16 @@ write.csv(fit_df, file = file_path, row.names = FALSE)
 
 ```{r}
 # Set the working directory
-setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mpfc")
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC")
 
 # Specify the output folder
-output_folder <- "/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mpfc/Graphs_PD60_mpfc"
+output_folder <- "/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC/Graphs_PD35_HPC"
 
 #Filter by significant genes for either alcohol or water
-fit_df_mpfc_etoh_h2o <- fit_df %>%  filter(Ethanol_p.val < 0.05 | Water_p.val <0.05)
+fit_df_hpc_etoh_h2o <- fit_df %>%  filter(Ethanol_p.val < 0.05 | Water_p.val <0.05)
 
 #Convertir wide dataset in long dataset
-fit_df_long <- fit_df_mpfc_etoh_h2o %>% 
+fit_df_long <- fit_df_hpc_etoh_h2o %>% 
   select(c(Genes, Ethanol_p.val, Water_p.val)) %>% 
   pivot_longer(cols = c(Ethanol_p.val, Water_p.val), 
                                       names_to = "Group", 
@@ -139,7 +139,7 @@ fit_df_long <- fit_df_mpfc_etoh_h2o %>%
   theme(panel.background = element_rect(fill = "white")))
 
 # Define the file name
-file_name <- paste0(output_folder, "/pvalue_pd60_mpfc.png")
+file_name <- paste0(output_folder, "/pvalue_PD35_HPC.png")
 
 # Save the plot as a PNG file in the output folder
 ggsave(file = file_name, plot = plot, width = 6, height = 4, units = "in")
@@ -150,19 +150,19 @@ ggsave(file = file_name, plot = plot, width = 6, height = 4, units = "in")
 
 ```{r}
 # Set the working directory
-setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mpfc")
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC")
 
 # Specify the output folder
-output_folder <- "Graphs_PD60_mpfc"
+output_folder <- "Graphs_PD35_HPC"
 
 # Generate the plot
-plot <- gg_kronos_acrogram(out_list_pd60_mpfc) +
+plot <- gg_kronos_acrogram(out_list_PD35_HPC) +
   scale_fill_manual(values = c("Water" = "#A1A1A1",
                                 "Ethanol" = "#F764C6")) +
-  ggtitle("Acrogram PD60 mpfc")
+  ggtitle("Acrogram PD35 HPC")
 
 # Define the file name
-file_name <- paste0(output_folder, "/acrogram_pd60_mpfc.png")
+file_name <- paste0(output_folder, "/acrogram_PD35_HPC.png")
 
 # Save the plot as a PNG file in the output folder
 ggsave(file = file_name, plot = plot, width = 6, height = 4, units = "in")
@@ -170,10 +170,10 @@ ggsave(file = file_name, plot = plot, width = 6, height = 4, units = "in")
 ```
 
 ```{r}
-pairwise_list = vector(mode = "list", length = length(out_list_pd60_mpfc)) 
-for(m in 1:length(out_list_pd60_mpfc)){
-  pairwise_list[[m]] <- out_list_pd60_mpfc [[m]]@pairwise_models
-  names(pairwise_list)[m] <- names(out_list_pd60_mpfc)[m]}
+pairwise_list = vector(mode = "list", length = length(out_list_PD35_HPC)) 
+for(m in 1:length(out_list_PD35_HPC)){
+  pairwise_list[[m]] <- out_list_PD35_HPC [[m]]@pairwise_models
+  names(pairwise_list)[m] <- names(out_list_PD35_HPC)[m]}
 bound_list <- lapply(X = pairwise_list, FUN = function(x){do.call(rbind, x)})
 pairwise_df <- do.call(rbind, bound_list)
 pairwise_csv = pairwise_df %>% 
@@ -186,17 +186,17 @@ pairwise_csv = pairwise_df %>%
 
 ```{r}
 # Set the working directory
-setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mpfc")
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC")
 
 # Specify the output folder
-output_folder <- "Graphs_PD60_mpfc"
+output_folder <- "Graphs_PD35_HPC"
 
 gene_names <- fit_df$Genes
 
-plot_list <- vector(mode = "list", length = length(out_list_pd60_mpfc))
-for(q in 1:length(out_list_pd60_mpfc)){
+plot_list <- vector(mode = "list", length = length(out_list_PD35_HPC))
+for(q in 1:length(out_list_PD35_HPC)){
   
-  plot_list[[q]] <- gg_kronos_sinusoid_noNA(out_list_pd60_mpfc[[q]]) +
+  plot_list[[q]] <- gg_kronos_sinusoid_noNA(out_list_PD35_HPC[[q]]) +
         scale_colour_manual(values = c("Water" = "#000000", "Ethanol" = "#F764C6")) + #line color
         scale_fill_manual(values = c("Water" = "#FFFFFF", "Ethanol" = "#F764C6")) +
     xlab("ZT") +
@@ -204,24 +204,49 @@ for(q in 1:length(out_list_pd60_mpfc)){
     ggtitle(paste(gene_names[q], "expression", sep = " "))#filling color
     }
  
-  pdf("Plots_circadian_pd60_mpfc.pdf")
+  pdf("Plots_circadian_PD35_HPC_2.pdf")
 for (i in 1:length(plot_list)) {
   print(plot_list[[i]])
 }
 invisible(dev.off())
 ```
 
+#CIRCADIAN PLOT 2
+```{r}
+# Set the working directory
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC")
+
+# Specify the output folder
+output_folder <- "Graphs_PD35_HPC"
+
+gene_names <- fit_df$Genes
+
+plot_list <- vector(mode = "list", length = length(out_list_PD35_HPC))
+for(q in 1:length(out_list_PD35_HPC)){
+  
+  plot_list[[q]] <- gg_kronos_sinusoid_noNA(out_list_PD35_HPC[[q]]) +
+    scale_colour_manual(values = c("Water" = "#000000", "Ethanol" = "#F764C6")) + #line color
+        scale_fill_manual(values = c("Water" = "#FFFFFF", "Ethanol" = "#F764C6")) +
+    ggtitle(paste(gene_names[q], "expression", sep = " "))
+  }
+  
+  pdf("Plots_circadian_PD35_HPC_3.pdf")
+for (i in 1:length(plot_list)) {
+  print(plot_list[[i]])
+}
+invisible(dev.off())
+```
 #CORRELATION MATRIX AND HEATMAP
 
 ```{r}
 #Matrix de correlación
-cor(t(bigdata_pd60_mpfc[,-1]))
-corrplot(cor(t(bigdata_pd60_mpfc[,-1])))
+cor(t(bigdata_PD35_HPC[,-1]))
+corrplot(cor(t(bigdata_PD35_HPC[,-1])))
 #Pendent: corrgeir els missing values per poder fer les correlacions entre els gens. Crec que esta fet
 
 #Heatmap
-heatmap(as.matrix(t(bigdata_pd60_mpfc[,-1])),
-        scale = "col", labCol = bigdata_pd60_mpfc$Genes, col = c("red","blue"))
+heatmap(as.matrix(t(bigdata_PD35_HPC[,-1])),
+        scale = "col", labCol = bigdata_PD35_HPC$Genes, col = c("red","blue"))
 
 ```
 
@@ -232,6 +257,6 @@ heatmap(as.matrix(t(bigdata_pd60_mpfc[,-1])),
 altered_genes <- fit_df %>%  filter(Ethanol_p.val > 0.05 & Water_p.val <0.05) 
 altered_genes_names <- altered_genes$Genes
 
-gost(altered_genes_names, organism = "mmusculus", significant = FALSE, correction_method = "fdr", custom_bg = bigdata_pd60_mpfc$Genes)
+gost(altered_genes_names, organism = "mmusculus", significant = FALSE, correction_method = "fdr", custom_bg = bigdata_PD35_HPC$Genes)
 
 ```

@@ -1,9 +1,7 @@
 
-#OPEN LIBRARIES
+# OPEN LIBRARIES
 
 ```{r}
-#SCN CLOCK GENES
-#OPEN LIBRARIES
 library(kronos)
 
 #Change sinusoid function to omit NA in the plot
@@ -53,71 +51,69 @@ gg_kronos_sinusoid_noNA <- function(kronosOut, fill = "unique_group"){
 #Open the rest of the libraries
 library(tidyverse)
 library(ggplot2)
-setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN")
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC")
 
 ```
 
-#DATA
+# DATA
 
 ```{r}
-setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN")
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC")
 
 library(readxl)
-pd60_SCN_bmal1 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_SCN_bmal1.xlsx")
-pd60_SCN_bmal1 <- na.omit(pd60_SCN_bmal1)
-pd60_SCN_bmal1$Cycle <- factor(pd60_SCN_bmal1$Cycle) #Put "Cycle" as factor
+PD35_HPC_bmal1 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC/PD35_HPC_bmal1.xlsx")
+PD35_HPC_bmal1 <- na.omit(PD35_HPC_bmal1)
+PD35_HPC_bmal1$Cycle <- factor(PD35_HPC_bmal1$Cycle) #Put "Cycle" as factor
 
-pd60_SCN_clock <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_SCN_clock.xlsx")
-pd60_SCN_clock <- na.omit(pd60_SCN_clock)
-pd60_SCN_clock$Cycle <- factor(pd60_SCN_clock$Cycle) #Put "Cycle" as factor
+PD35_HPC_clock <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC/PD35_HPC_clock.xlsx")
+PD35_HPC_clock <- na.omit(PD35_HPC_clock)
+PD35_HPC_clock$Cycle <- factor(PD35_HPC_clock$Cycle) #Put "Cycle" as factor
 
-pd60_SCN_cry1 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_SCN_cry1.xlsx")
-pd60_SCN_cry1 <- na.omit(pd60_SCN_cry1)
-pd60_SCN_cry1$Cycle <- factor(pd60_SCN_cry1$Cycle) #Put "Cycle" as factor
+PD35_HPC_cry1 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC/PD35_HPC_cry1.xlsx")
+PD35_HPC_cry1 <- na.omit(PD35_HPC_cry1)
+PD35_HPC_cry1$Cycle <- factor(PD35_HPC_cry1$Cycle) #Put "Cycle" as factor
 
-pd60_SCN_cry2 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_SCN_cry2.xlsx")
-pd60_SCN_cry2 <- na.omit(pd60_SCN_cry2)
-pd60_SCN_cry2$Cycle <- factor(pd60_SCN_cry2$Cycle) #Put "Cycle" as factor
+PD35_HPC_cry2 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC/PD35_HPC_cry2.xlsx")
+PD35_HPC_cry2 <- na.omit(PD35_HPC_cry2)
+PD35_HPC_cry2$Cycle <- factor(PD35_HPC_cry2$Cycle) #Put "Cycle" as factor
 
-pd60_SCN_dbp <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_SCN_dbp.xlsx")
-pd60_SCN_dbp <- na.omit(pd60_SCN_dbp)
-pd60_SCN_dbp$Cycle <- factor(pd60_SCN_dbp$Cycle) #Put "Cycle" as factor
+PD35_HPC_dbp <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC/PD35_HPC_dbp.xlsx")
+PD35_HPC_dbp <- na.omit(PD35_HPC_dbp)
+PD35_HPC_dbp$Cycle <- factor(PD35_HPC_dbp$Cycle) #Put "Cycle" as factor
 
-pd60_SCN_gsk3b <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_SCN_gsk3b.xlsx")
-pd60_SCN_gsk3b <- na.omit(pd60_SCN_gsk3b)
-pd60_SCN_gsk3b$Cycle <- factor(pd60_SCN_gsk3b$Cycle) #Put "Cycle" as factor
+PD35_HPC_gsk3b <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC/PD35_HPC_gsk3b.xlsx")
+PD35_HPC_gsk3b <- na.omit(PD35_HPC_gsk3b)
+PD35_HPC_gsk3b$Cycle <- factor(PD35_HPC_gsk3b$Cycle) #Put "Cycle" as factor
 
-pd60_SCN_nr1d2 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_SCN_nr1d2.xlsx")
-pd60_SCN_nr1d2 <- na.omit(pd60_SCN_nr1d2)
-pd60_SCN_nr1d2$Cycle <- factor(pd60_SCN_nr1d2$Cycle) #Put "Cycle" as factor
+PD35_HPC_nr1d2 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC/PD35_HPC_nr1d2.xlsx")
+PD35_HPC_nr1d2 <- na.omit(PD35_HPC_nr1d2)
+PD35_HPC_nr1d2$Cycle <- factor(PD35_HPC_nr1d2$Cycle) #Put "Cycle" as factor
 
-pd60_SCN_per1 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_SCN_per1.xlsx")
-pd60_SCN_per1 <- na.omit(pd60_SCN_per1)
-pd60_SCN_per1$Cycle <- factor(pd60_SCN_per1$Cycle) #Put "Cycle" as factor
+PD35_HPC_per1 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC/PD35_HPC_per1.xlsx")
+PD35_HPC_per1 <- na.omit(PD35_HPC_per1)
+PD35_HPC_per1$Cycle <- factor(PD35_HPC_per1$Cycle) #Put "Cycle" as factor
 
-pd60_SCN_per2 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_SCN_per2.xlsx")
-pd60_SCN_per2 <- na.omit(pd60_SCN_per2)
-pd60_SCN_per2$Cycle <- factor(pd60_SCN_per2$Cycle) #Put "Cycle" as factor
+PD35_HPC_per2 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC/PD35_HPC_per2.xlsx")
+PD35_HPC_per2 <- na.omit(PD35_HPC_per2)
+PD35_HPC_per2$Cycle <- factor(PD35_HPC_per2$Cycle) #Put "Cycle" as factor
 
-pd60_SCN_rora <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/pd60_SCN_rora.xlsx")
-pd60_SCN_rora <- na.omit(pd60_SCN_rora)
-pd60_SCN_rora$Cycle <- factor(pd60_SCN_rora$Cycle) #Put "Cycle" as factor
+PD35_HPC_rora <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC/PD35_HPC_rora.xlsx")
+PD35_HPC_rora <- na.omit(PD35_HPC_rora)
+PD35_HPC_rora$Cycle <- factor(PD35_HPC_rora$Cycle) #Put "Cycle" as factor
 
-datasheet_list <- list(pd60_SCN_bmal1, pd60_SCN_clock, pd60_SCN_cry1, pd60_SCN_cry2, pd60_SCN_dbp, pd60_SCN_gsk3b, pd60_SCN_nr1d2, pd60_SCN_per1, pd60_SCN_per2, pd60_SCN_rora)  # Add all your datasheets to this list
+datasheet_list <- list(PD35_HPC_bmal1, PD35_HPC_clock, PD35_HPC_cry1, PD35_HPC_cry2, PD35_HPC_dbp, PD35_HPC_gsk3b, PD35_HPC_nr1d2, PD35_HPC_per1, PD35_HPC_per2, PD35_HPC_rora)  # Add all your datasheets to this list
 
-levels(pd60_SCN_rora$Cycle) #Posar un dels excels per veure si s'han posat com a factor
-
+levels(PD35_HPC_rora$Cycle) #Posar un dels excels per veure si s'han posat com a factor
 
 ```
-
-#CIRCADIAN ANALYSIS
+# CIRCADIAN ANALYSIS
 
 ```{r}
 library(openxlsx)
-setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN")
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC")
 
 # List of datasheets (definit previament)
-datasheet_list <- list(pd60_SCN_bmal1, pd60_SCN_clock, pd60_SCN_cry1, pd60_SCN_cry2, pd60_SCN_dbp, pd60_SCN_gsk3b, pd60_SCN_nr1d2, pd60_SCN_per1, pd60_SCN_per2, pd60_SCN_rora)  # Add all your datasheets to this list
+datasheet_list <- list(PD35_HPC_bmal1, PD35_HPC_clock, PD35_HPC_cry1, PD35_HPC_cry2, PD35_HPC_dbp, PD35_HPC_gsk3b, PD35_HPC_nr1d2, PD35_HPC_per1, PD35_HPC_per2, PD35_HPC_rora)  # Add all your datasheets to this list
 
 output_list <- list()
 
@@ -171,7 +167,7 @@ for (i in seq_along(output_list)) {
 }
 
 # Save the workbook to a file
-saveWorkbook(wb, file = "PD60_SCN_all_clock_genes.xlsx", overwrite = TRUE)
+saveWorkbook(wb, file = "PD35_HPC_all_clock_genes.xlsx", overwrite = TRUE)
 
 
 # convert cycle in factor in output_list
@@ -179,17 +175,17 @@ saveWorkbook(wb, file = "PD60_SCN_all_clock_genes.xlsx", overwrite = TRUE)
 for(i in seq(length(output_list))){
   output_list[[i]]@input$Cycle = as.factor(output_list[[i]]@input$Cycle)
 }
-
 ```
+
 # SINUSOID PLOTS
 
 ```{r}
 
 # Set the working directory inicial
-setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN")
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD35_HPC")
 
 # Specify the output folder
-output_folder <- "Graphs_PD60_SCN"
+output_folder <- "Graphs_PD35_HPC"
 
 # Create the output folder if it doesn't exist
 if (!file.exists(output_folder)) {
@@ -212,7 +208,7 @@ for (i in seq_along(output_list)) {
   gene_name <- gene_names[i]
   
   # Save the plot with a unique file name for each output containing the gene name
-  file_name <- paste0(output_folder, "/", gene_name, "_pd60_SCN.png")  # For example: _pd60_SCN_bmal1.png 
+  file_name <- paste0(output_folder, "/", gene_name, "_PD35_HPC.png")  # For example: _PD35_hpc_bmal1.png 
 
   # Save the plot as a PNG file with a specific size
   ggsave(file = file_name, plot = plot, width = 6, height = 4, units = "in")

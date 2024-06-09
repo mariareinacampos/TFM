@@ -1,54 +1,120 @@
+
+#OPEN LIBRARIES
+
 ```{r}
-#mPFC
 library(kronos)
+
+#Change sinusoid function to omit NA in the plot
+gg_kronos_sinusoid_noNA <- function(kronosOut, fill = "unique_group"){
+  
+  requireNamespace("ggplot2")
+  
+  d <- merge(kronosOut@input, kronosOut@to_plot, by="row.names", all=TRUE)[,-1]
+  d_noNA <- na.omit(d)
+  x_obs  <- paste0(kronosOut@plot_info$time, ".x")
+  x_pred = paste0(kronosOut@plot_info$time, ".y")
+  y_obs  = colnames(kronosOut@fit$model)[1]
+  y_pred = "y_hat"
+  fill_obs  = "unique_group.x"
+  fill_pred = "unique_group.y"
+  period    = kronosOut@plot_info$period
+  
+  if(sum(grepl(pattern = "unique_group.x|unique_group.y", x = colnames(d))) == 0){
+    d$unique_group.x <- ""
+    d$unique_group.y <- ""
+  }
+  ggplot(d) +
+    
+    geom_rect(data=NULL, aes(xmin=12, xmax=Inf, ymin=-Inf, ymax=Inf), fill="lightgray") +
+    
+    geom_line(aes_string(x = x_pred, y = y_pred, colour = fill_pred)) +
+    
+    stat_summary(fun.data = mean_se, geom = "errorbar", position = position_dodge(0.75), width = 1, 
+                 aes_string(x = x_obs, y = y_obs, group = fill_obs)) + 
+    
+    stat_summary(fun = mean, geom="point", position = position_dodge(0.75), size = 4, shape = 21, 
+                 aes_string(x = x_obs, y = y_obs, fill = fill_obs)) +
+    
+    geom_point(data = d_noNA,aes_string(x = x_obs, y = y_obs, fill = fill_obs), shape = 21, position = position_dodge(0.75)) +
+    
+    scale_x_continuous(breaks = seq(0, period, period/4), expand = c(0, 0)) +
+    
+    theme_bw() +
+    guides(fill = guide_legend("Legend", override.aes = list(size = 3)), colour = guide_none()) +
+    
+    xlab("") +
+    
+    ylab("")
+
+}
+
+#Open the rest of the libraries
 library(tidyverse)
 library(ggplot2)
 setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC")
 
 ```
 
+# DATA
+
 ```{r}
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC")
+
 library(readxl)
 pd60_mpfc_bmal1 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC/pd60_mpfc_bmal1.xlsx")
+pd60_mpfc_bmal1 <- na.omit(pd60_mpfc_bmal1)
+pd60_mpfc_bmal1$Cycle <- factor(pd60_mpfc_bmal1$Cycle) #Put "Cycle" as factor
 
 pd60_mpfc_clock <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC/pd60_mpfc_clock.xlsx")
+pd60_mpfc_clock <- na.omit(pd60_mpfc_clock)
+pd60_mpfc_clock$Cycle <- factor(pd60_mpfc_clock$Cycle) #Put "Cycle" as factor
 
 pd60_mpfc_cry1 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC/pd60_mpfc_cry1.xlsx")
+pd60_mpfc_cry1 <- na.omit(pd60_mpfc_cry1)
+pd60_mpfc_cry1$Cycle <- factor(pd60_mpfc_cry1$Cycle) #Put "Cycle" as factor
 
 pd60_mpfc_cry2 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC/pd60_mpfc_cry2.xlsx")
+pd60_mpfc_cry2 <- na.omit(pd60_mpfc_cry2)
+pd60_mpfc_cry2$Cycle <- factor(pd60_mpfc_cry2$Cycle) #Put "Cycle" as factor
 
 pd60_mpfc_dbp <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC/pd60_mpfc_dbp.xlsx")
+pd60_mpfc_dbp <- na.omit(pd60_mpfc_dbp)
+pd60_mpfc_dbp$Cycle <- factor(pd60_mpfc_dbp$Cycle) #Put "Cycle" as factor
 
 pd60_mpfc_gsk3b <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC/pd60_mpfc_gsk3b.xlsx")
+pd60_mpfc_gsk3b <- na.omit(pd60_mpfc_gsk3b)
+pd60_mpfc_gsk3b$Cycle <- factor(pd60_mpfc_gsk3b$Cycle) #Put "Cycle" as factor
 
 pd60_mpfc_nr1d2 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC/pd60_mpfc_nr1d2.xlsx")
+pd60_mpfc_nr1d2 <- na.omit(pd60_mpfc_nr1d2)
+pd60_mpfc_nr1d2$Cycle <- factor(pd60_mpfc_nr1d2$Cycle) #Put "Cycle" as factor
 
 pd60_mpfc_per1 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC/pd60_mpfc_per1.xlsx")
+pd60_mpfc_per1 <- na.omit(pd60_mpfc_per1)
+pd60_mpfc_per1$Cycle <- factor(pd60_mpfc_per1$Cycle) #Put "Cycle" as factor
 
 pd60_mpfc_per2 <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC/pd60_mpfc_per2.xlsx")
+pd60_mpfc_per2 <- na.omit(pd60_mpfc_per2)
+pd60_mpfc_per2$Cycle <- factor(pd60_mpfc_per2$Cycle) #Put "Cycle" as factor
 
 pd60_mpfc_rora <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC/pd60_mpfc_rora.xlsx")
+pd60_mpfc_rora <- na.omit(pd60_mpfc_rora)
+pd60_mpfc_rora$Cycle <- factor(pd60_mpfc_rora$Cycle) #Put "Cycle" as factor
+
+datasheet_list <- list(pd60_mpfc_bmal1, pd60_mpfc_clock, pd60_mpfc_cry1, pd60_mpfc_cry2, pd60_mpfc_dbp, pd60_mpfc_gsk3b, pd60_mpfc_nr1d2, pd60_mpfc_per1, pd60_mpfc_per2, pd60_mpfc_rora)  # Add all your datasheets to this list
+
+levels(pd60_mpfc_rora$Cycle) #Posar un dels excels per veure si s'han posat com a factor
+
+
 ```
 
-```{r}
-#Para asegurarse que todos los ficheros tienen los datos en el formato adecuado
-summary(pd60_hpc_bmal1)
-summary(pd60_hpc_clock)
-summary(pd60_hpc_cry1)
-summary(pd60_hpc_cry2)
-summary(pd60_hpc_dbp)
-summary(pd60_hpc_gsk3b)
-summary(pd60_hpc_nr1d2)
-summary(pd60_hpc_per1)
-summary(pd60_hpc_per2)
-summary(pd60_hpc_rora)
-```
+# CIRCADIAN ANALYSIS
 
 ```{r}
 library(openxlsx)
 setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC")
 
-# List of datasheets (replace with your actual datasheets)
+# List of datasheets (definit previament)
 datasheet_list <- list(pd60_mpfc_bmal1, pd60_mpfc_clock, pd60_mpfc_cry1, pd60_mpfc_cry2, pd60_mpfc_dbp, pd60_mpfc_gsk3b, pd60_mpfc_nr1d2, pd60_mpfc_per1, pd60_mpfc_per2, pd60_mpfc_rora)  # Add all your datasheets to this list
 
 output_list <- list()
@@ -104,7 +170,16 @@ for (i in seq_along(output_list)) {
 
 # Save the workbook to a file
 saveWorkbook(wb, file = "PD60_mPFC_all_clock_genes.xlsx", overwrite = TRUE)
+
+
+# convert cycle in factor in output_list
+
+for(i in seq(length(output_list))){
+  output_list[[i]]@input$Cycle = as.factor(output_list[[i]]@input$Cycle)
+}
+
 ```
+# SINUSOID PLOTS
 
 ```{r}
 
@@ -124,7 +199,7 @@ for (i in seq_along(output_list)) {
   output <- output_list[[i]]
   
   # Create a plot for each outcome
-  plot <- gg_kronos_sinusoid(output) +
+  plot <- gg_kronos_sinusoid_noNA(output) +
     scale_colour_manual(values = c("Water" = "#000000", "Ethanol" = "#F764C6")) + #line color
     scale_fill_manual(values = c("Water" = "#FFFFFF", "Ethanol" = "#F764C6")) + #filling color
     xlab("ZT") +

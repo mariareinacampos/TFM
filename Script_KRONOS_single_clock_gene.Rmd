@@ -1,22 +1,71 @@
 
 ```{r}
 library(kronos)
+gg_kronos_sinusoid_noNA <- function(kronosOut, fill = "unique_group"){
+  
+  requireNamespace("ggplot2")
+  
+  d <- merge(kronosOut@input, kronosOut@to_plot, by="row.names", all=TRUE)[,-1]
+  #d_noNA <- na.omit(d)
+  d_noNA <- d
+  x_obs  <- paste0(kronosOut@plot_info$time, ".x")
+  x_pred = paste0(kronosOut@plot_info$time, ".y")
+  y_obs  = colnames(kronosOut@fit$model)[1]
+  y_pred = "y_hat"
+  fill_obs  = "unique_group.x"
+  fill_pred = "unique_group.y"
+  period    = kronosOut@plot_info$period
+  
+  if(sum(grepl(pattern = "unique_group.x|unique_group.y", x = colnames(d))) == 0){
+    d$unique_group.x <- ""
+    d$unique_group.y <- ""
+  }
+  ggplot(d) +
+    
+    geom_rect(data=NULL, aes(xmin=12, xmax=Inf, ymin=-Inf, ymax=Inf), fill="lightgray") +
+    
+    geom_line(aes_string(x = x_pred, y = y_pred, colour = fill_pred)) +
+    
+    stat_summary(fun.data = mean_se, geom = "errorbar", position = position_dodge(0.75), width = 1, 
+                 aes_string(x = x_obs, y = y_obs, group = fill_obs)) + 
+    
+    stat_summary(fun = mean, geom="point", position = position_dodge(0.75), size = 4, shape = 21, 
+                 aes_string(x = x_obs, y = y_obs, fill = fill_obs)) +
+    
+    geom_point(data = d_noNA,aes_string(x = x_obs, y = y_obs, fill = fill_obs), shape = 21, position = position_dodge(0.75)) +
+    
+    scale_x_continuous(breaks = seq(0, period, period/4), expand = c(0, 0)) +
+    
+    theme_bw() +
+    guides(fill = guide_legend("Legend", override.aes = list(size = 3)), colour = guide_none()) +
+    
+    xlab("") +
+    
+    ylab("")
+
+}
 library(tidyverse)
 library(ggplot2)
-setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC")
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_HPC")
 ```
 
 ```{r}
+#Open excels, take missing values out and convert the column "Cycle" to factor
 library(readxl)
-pd60_mpfc_bmal1_test <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC/pd60_mpfc_bmal1.xlsx")
+pd60_hpc_per2_test <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_HPC/pd60_HPC_per2.xlsx")
+pd60_hpc_per2_test <- na.omit(pd60_hpc_per2_test)
+pd60_hpc_per2_test$Cycle <- factor(pd60_hpc_per2_test$Cycle) #Put "Cycle" as factor
+levels(pd60_hpc_per2_test$Cycle)
+
+datasheet_list <- list(pd60_hpc_per2_test)
+
 ```
 
 ```{r}
 library(openxlsx)
-setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC")
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_HPC")
 
-# List of datasheets (replace with your actual datasheets)
-datasheet_list <- list(pd60_mpfc_bmal1_test)  # Add all your datasheets to this list
+datasheet_list <- list(pd60_hpc_per2_test)
 
 output_list <- list()
 
@@ -55,7 +104,7 @@ lapply(datasheet_list, perform_analysis)
 wb <- createWorkbook()
 
 # Extract gene names from datasheet names
-gene_names <- c("bmal1")
+gene_names <- c("per2")
 
 # Add each output as a sheet to the workbook
 for (gene_name in gene_names) {
@@ -72,22 +121,21 @@ for (i in seq_along(output_list)) {
 }
 
 # Save the workbook to a file
-saveWorkbook(wb, file = "PD60_mPFC_single_clock_gene.xlsx", overwrite = TRUE)
+saveWorkbook(wb, file = "PD60_HPC_single_clock_gene.xlsx", overwrite = TRUE)
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
 ```{r}
-
+#GENERACIÓ DELS GRÀFIC SINUSOIDE I CERCLE
 # Set the working directory inicial
-setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_mPFC")
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_HPC")
 
 # Loop through each output in output_list and generate a plot using gg_kronos_sinusoid
 for (i in seq_along(output_list)) {
   output <- output_list[[i]]
   
   # Create a plot for each outcome
-  plot <- gg_kronos_sinusoid(output) +
+  plot <- gg_kronos_sinusoid_noNA(output) +
     scale_colour_manual(values = c("Water" = "#000000", "Ethanol" = "#F764C6")) + #line color
     scale_fill_manual(values = c("Water" = "#FBFBFB", "Ethanol" = "#F764C6")) + #filling color
     xlab("ZT") +
@@ -98,7 +146,7 @@ for (i in seq_along(output_list)) {
   gene_name <- gene_names[i]
   
   # Save the plot with a unique file name for each output containing the gene name
-  file_name <- paste0(gene_name, "_pd60_mpfc_test.png")  # For example: sc_pd60_hpc_bmal1.png with sc as for sinnusoid curve
+  file_name <- paste0(gene_name, "_pd60_hpc_test.png")  # For example: sc_pd60_hpc_cry2.png with sc as for sinnusoid curve
   
   # Save the plot as a PNG file with a specific size
   ggsave(file = file_name, plot = plot, width = 6, height = 4, units = "in")

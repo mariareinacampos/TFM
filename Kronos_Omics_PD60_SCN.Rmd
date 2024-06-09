@@ -1,28 +1,80 @@
+#OPEN LIBRARIES
 
 ```{r}
 library(kronos)
+gg_kronos_sinusoid_noNA <- function(kronosOut, fill = "unique_group"){
+  
+  requireNamespace("ggplot2")
+  
+  d <- merge(kronosOut@input, kronosOut@to_plot, by="row.names", all=TRUE)[,-1]
+  d_noNA <- na.omit(d)
+  x_obs  <- paste0(kronosOut@plot_info$time, ".x")
+  x_pred = paste0(kronosOut@plot_info$time, ".y")
+  y_obs  = colnames(kronosOut@fit$model)[1]
+  y_pred = "y_hat"
+  fill_obs  = "unique_group.x"
+  fill_pred = "unique_group.y"
+  period    = kronosOut@plot_info$period
+  
+  if(sum(grepl(pattern = "unique_group.x|unique_group.y", x = colnames(d))) == 0){
+    d$unique_group.x <- ""
+    d$unique_group.y <- ""
+  }
+  ggplot(d) +
+    
+    geom_rect(data=NULL, aes(xmin=12, xmax=Inf, ymin=-Inf, ymax=Inf), fill="lightgray") +
+    
+    geom_line(aes_string(x = x_pred, y = y_pred, colour = fill_pred)) +
+    
+    stat_summary(fun.data = mean_se, geom = "errorbar", position = position_dodge(0.75), width = 1, 
+                 aes_string(x = x_obs, y = y_obs, group = fill_obs)) + 
+    
+    stat_summary(fun = mean, geom="point", position = position_dodge(0.75), size = 4, shape = 21, 
+                 aes_string(x = x_obs, y = y_obs, fill = fill_obs)) +
+    
+    geom_point(data = d_noNA,aes_string(x = x_obs, y = y_obs, fill = fill_obs), shape = 21, position = position_dodge(0.75)) +
+    
+    scale_x_continuous(breaks = seq(0, period, period/4), expand = c(0, 0)) +
+    
+    theme_bw() +
+    guides(fill = guide_legend("Legend", override.aes = list(size = 3)), colour = guide_none()) +
+    
+    xlab("") +
+    
+    ylab("")
+
+}
+
 library(tidyverse)
 library(ggplot2)
+library(corrplot)
+library(gprofiler2)
 ```
 
-Import dataset
+#IMPORT DATASET
+
 ```{r}
 library(readxl)
 bigdata_pd60_scn <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/bigdata_pd60_scn.xlsx")
-bigmeta_pd60_scn <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/bigmeta_pd60_scn.xlsx")
+
+bigmeta_pd60_SCN <- read_excel("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/bigmeta_pd60_scn.xlsx")
 ```
 
-'Omics analysis
+#OMIC ANALYSIS
+
 ```{r}
 #n = c(rows, columns)
-head(bigdata_pd60_scn, n = c(52, 47)) #52 files comptant la cabecera, 51 sense la fila inicial
-head(bigmeta_pd60_scn)
+print(bigdata_pd60_scn, n = c(50, 57)) #52 files comptant la cabecera, 51 sense la fila inicial
+dim(bigdata_pd60_scn)
+head(bigmeta_pd60_SCN)
+dim(bigmeta_pd60_SCN)
+
 ```
 
 ```{r}
-out_list_pd60_scn = fw_kronos(x = bigdata_pd60_scn, 
+out_list_pd60_SCN = fw_kronos(x = bigdata_pd60_scn[,-1],
                      formula = ~ Group + time(Timepoint), 
-                     metadata = bigmeta_pd60_scn, 
+                     metadata = bigmeta_pd60_SCN, 
                      period = 24,
                      verbose = F,
                      pairwise = T)
@@ -31,18 +83,70 @@ out_list_pd60_scn = fw_kronos(x = bigdata_pd60_scn,
 ```{r}
 
 # Convert kronosList to data frame
-fit_df <- kronosListToTable(out_list_pd60_scn)
+fit_df <- kronosListToTable(out_list_pd60_SCN)
+
+#Transform the file into a data.frame to work on it in R
+fit_df <- as.data.frame(fit_df)
+fit_df$Genes <- bigdata_pd60_scn$Genes
+
+#Move the Genes column to the first position
+fit_df %>% select(Genes, everything(fit_df)) #Aquí m'ho esta ensenyant a la pantalla, no és real. La funció select és per seleccionar columnes.
+fit_df <- fit_df %>% select(Genes, everything(fit_df)) #Aquí estem guardant-ho de veritat
 
 # Specify the full file path for CSV
-file_path <- "/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/RhythmicityResults_pd60_scn.csv"
+file_path <- "/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/RhythmicityResults_pd60_SCN.csv"
 
 # Write data frame to CSV file
 write.csv(fit_df, file = file_path, row.names = FALSE)
 
 ```
 
-head(fit_df, n = c(4, 39))
+#P VALUE GRAPH
 
+```{r}
+# Set the working directory
+setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN")
+
+# Specify the output folder
+output_folder <- "/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SCN/Graphs_PD60_SCN"
+
+#Filter by significant genes for either alcohol or water
+fit_df_scn_etoh_h2o <- fit_df %>%  filter(Ethanol_p.val < 0.05 | Water_p.val <0.05)
+
+#Convertir wide dataset in long dataset
+fit_df_long <- fit_df_scn_etoh_h2o %>% 
+  select(c(Genes, Ethanol_p.val, Water_p.val)) %>% 
+  pivot_longer(cols = c(Ethanol_p.val, Water_p.val), 
+                                      names_to = "Group", 
+                                      values_to = "p_value")
+
+#Graph genes vs p value. Ordenem els genes per valor creixent de p valor.
+
+(plot <- fit_df_long %>% ggplot(aes(x =Genes, 
+                                    y = -log(p_value),
+                                    col = Group)) + #Primera capa son els eixos
+  geom_point(size = 3, 
+             alpha = 0.75) +  #With this second layer we add the dots. Es deixa buit i així enten que ha d'agafar lo                               d'abans.
+  geom_hline(yintercept = -log(0.05), 
+             linetype = "dashed", 
+             lwd = 0.2) + #Posem una linea per marcar el threshold de la significancia
+  theme_minimal() + #With this forth layer we decide the aesthetical vibe 
+  labs(x = "Genes", 
+       y = "-log(p-value)") + #With this fifth layer we add the labels
+  scale_color_manual(values = c("Water_p.val" = "#000000",
+                                "Ethanol_p.val" = "#F764C6"),
+                     labels = c("Ethanol","Water")) + #With this layer we decide the colors
+  theme(panel.background = element_rect(fill = "white")))
+
+# Define the file name
+file_name <- paste0(output_folder, "/pvalue_pd60_SCN.png")
+
+# Save the plot as a PNG file in the output folder
+ggsave(file = file_name, plot = plot, width = 6, height = 4, units = "in")
+
+```
+
+#ACROGRAM GRAPH
 
 ```{r}
 # Set the working directory
@@ -52,25 +156,24 @@ setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SC
 output_folder <- "Graphs_PD60_SCN"
 
 # Generate the plot
-plot <- gg_kronos_acrogram(out_list_pd60_mpfc) +
+plot <- gg_kronos_acrogram(out_list_pd60_SCN) +
   scale_fill_manual(values = c("Water" = "#A1A1A1",
                                 "Ethanol" = "#F764C6")) +
-  ggtitle("Gene expression")
+  ggtitle("Acrogram PD60 SCN")
 
 # Define the file name
-file_name <- paste0(output_folder, "/acrogram_pd60_scn.png")
+file_name <- paste0(output_folder, "/acrogram_pd60_SCN.png")
 
 # Save the plot as a PNG file in the output folder
 ggsave(file = file_name, plot = plot, width = 6, height = 4, units = "in")
 
 ```
 
-
 ```{r}
-pairwise_list = vector(mode = "list", length = length(out_list_pd60_scn)) 
-for(m in 1:length(out_list_pd60_scn)){
-  pairwise_list[[m]] <- out_list_pd60_scn [[m]]@pairwise_models
-  names(pairwise_list)[m] <- names(out_list_pd60_scn)[m]}
+pairwise_list = vector(mode = "list", length = length(out_list_pd60_SCN)) 
+for(m in 1:length(out_list_pd60_SCN)){
+  pairwise_list[[m]] <- out_list_pd60_SCN [[m]]@pairwise_models
+  names(pairwise_list)[m] <- names(out_list_pd60_SCN)[m]}
 bound_list <- lapply(X = pairwise_list, FUN = function(x){do.call(rbind, x)})
 pairwise_df <- do.call(rbind, bound_list)
 pairwise_csv = pairwise_df %>% 
@@ -79,8 +182,7 @@ pairwise_csv = pairwise_df %>%
   separate(col = ID, into = c("Comparison","Effect"), sep = "\\.")
 ```
 
-gg_kronos_acrogram(out_list_yjl_hc)
-
+#CIRCADIAN PLOT
 
 ```{r}
 # Set the working directory
@@ -89,14 +191,47 @@ setwd("/Users/mariareinacampos/Documents/00_MASTER/TFM/Resultats/Results_PD60_SC
 # Specify the output folder
 output_folder <- "Graphs_PD60_SCN"
 
-plot_list <- vector(mode = "list", length = length(out_list_pd60_scn))
-for(q in 1:length(out_list_pd60_scn)){
+gene_names <- fit_df$Genes
+
+plot_list <- vector(mode = "list", length = length(out_list_pd60_SCN))
+for(q in 1:length(out_list_pd60_SCN)){
   
-  plot_list[[q]] <- gg_kronos_sinusoid(out_list_pd60_scn[[q]]) }
-  
-  pdf("Plots_circadian_pd60_scn.pdf")
+  plot_list[[q]] <- gg_kronos_sinusoid_noNA(out_list_pd60_SCN[[q]]) +
+        scale_colour_manual(values = c("Water" = "#000000", "Ethanol" = "#F764C6")) + #line color
+        scale_fill_manual(values = c("Water" = "#FFFFFF", "Ethanol" = "#F764C6")) +
+    xlab("ZT") +
+    ylab("Fold change") +
+    ggtitle(paste(gene_names[q], "expression", sep = " "))#filling color
+    }
+ 
+  pdf("Plots_circadian_pd60_SCN.pdf")
 for (i in 1:length(plot_list)) {
   print(plot_list[[i]])
 }
 invisible(dev.off())
+```
+
+# CORRELATION MATRIX AND HEATMAP
+
+```{r}
+#Matrix de correlación
+cor(t(bigdata_pd60_scn[,-1]))
+corrplot(cor(t(bigdata_pd60_scn[,-1])))
+#Pendent: corrgeir els missing values per poder fer les correlacions entre els gens. Crec que esta fet
+
+#Heatmap
+heatmap(as.matrix(t(bigdata_pd60_scn[,-1])),
+        scale = "col", labCol = bigdata_pd60_scn$Genes, col = c("red","blue"))
+
+```
+
+# GENE ONTOLOGY
+
+```{r}
+#Filtrar la llista de gens per aquells que només són ritmics en aigua.
+altered_genes <- fit_df %>%  filter(Ethanol_p.val > 0.05 & Water_p.val <0.05) 
+altered_genes_names <- altered_genes$Genes
+
+gost(altered_genes_names, organism = "mmusculus", significant = FALSE, correction_method = "fdr", custom_bg = bigdata_pd60_scn$Genes)
+
 ```
